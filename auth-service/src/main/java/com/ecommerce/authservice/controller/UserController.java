@@ -83,6 +83,11 @@ public class UserController {
         if (jwt == null) {
             throw BusinessException.of(ErrorCode.AUTH_TOKEN_INVALID);
         }
-        return ApiResponse.ok(userMapper.toResponse(userService.findByUsername(jwt.getSubject())));
+        // sub is the Keycloak user id (UUID), not the username
+        return ApiResponse.ok(userMapper.toResponse(userService.resolveCurrentUser(
+                jwt.getSubject(),
+                jwt.getClaimAsString("preferred_username"),
+                jwt.getClaimAsString("email"),
+                jwt.getClaimAsString("name"))));
     }
 }

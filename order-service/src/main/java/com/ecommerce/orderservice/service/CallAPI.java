@@ -14,7 +14,7 @@ public class CallAPI {
     private final RestClient.Builder restClientBuilder;
 
     public UserDto receiverUserDto(Long userId, String token) {
-        return restClientBuilder.baseUrl("http://auth-service:8088").build()
+        return restClientBuilder.clone().baseUrl("http://auth-service:8088").build()
                 .get()
                 .uri("/api/manager/user/{id}", userId)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
@@ -23,9 +23,9 @@ public class CallAPI {
     }
 
     public ProductDto receiverProductDto(Integer productId) {
-        return restClientBuilder.baseUrl("http://product-service:8086").build()
+        return restClientBuilder.clone().baseUrl("http://product-service:8086").build()
                 .get()
-                .uri("/api/products/{id}", productId)
+                .uri("/product/api/products/{id}", productId) // direct call: include product-service's context path
                 .retrieve()
                 .body(ProductDto.class);
     }

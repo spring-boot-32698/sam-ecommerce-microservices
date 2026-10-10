@@ -115,6 +115,10 @@ services:
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      # One canonical issuer for browser- and container-obtained tokens (services validate iss against it);
+      # backchannel-dynamic keeps discovery/JWKS/token endpoints on keycloak:8080 for in-network callers.
+      KC_HOSTNAME: http://localhost:8080
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
       KC_DB: postgres
       KC_DB_URL_HOST: postgres
       KC_DB_URL_PORT: 5432
@@ -164,10 +168,12 @@ services:
     ports:
       - "8088:8088"
     environment:
-      JWT_ISSUER_URI: http://keycloak:8080/realms/ecommerce
+      JWT_ISSUER_URI: http://localhost:8080/realms/ecommerce
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
       KEYCLOAK_SERVER_URL: http://keycloak:8080
       KEYCLOAK_PUBLIC_SERVER_URL: ${KEYCLOAK_PUBLIC_SERVER_URL:-http://localhost:8080}
-      SSO_BACKEND_CALLBACK_URL: http://localhost:8088/api/v1/auth/callback
+      # Browser-facing, via APISIX (which adds the /auth context path)
+      SSO_BACKEND_CALLBACK_URL: http://localhost:9080/api/v1/auth/callback
       SSO_DEFAULT_FRONTEND_REDIRECT: http://localhost:3000/auth/callback
       SSO_ALLOWED_REDIRECT_URIS: http://localhost:3000/auth/callback,http://localhost:3001/auth/callback
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/authservice
@@ -188,7 +194,8 @@ services:
     ports:
       - "8086:8086"
     environment:
-      JWT_ISSUER_URI: http://keycloak:8080/realms/ecommerce
+      JWT_ISSUER_URI: http://localhost:8080/realms/ecommerce
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/productservice
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -205,7 +212,8 @@ services:
     ports:
       - "8084:8084"
     environment:
-      JWT_ISSUER_URI: http://keycloak:8080/realms/ecommerce
+      JWT_ISSUER_URI: http://localhost:8080/realms/ecommerce
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/orderservice
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -225,7 +233,8 @@ services:
     ports:
       - "8085:8085"
     environment:
-      JWT_ISSUER_URI: http://keycloak:8080/realms/ecommerce
+      JWT_ISSUER_URI: http://localhost:8080/realms/ecommerce
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/paymentservice
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -245,7 +254,8 @@ services:
     ports:
       - "8087:8087"
     environment:
-      JWT_ISSUER_URI: http://keycloak:8080/realms/ecommerce
+      JWT_ISSUER_URI: http://localhost:8080/realms/ecommerce
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shippingservice
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -262,7 +272,8 @@ services:
     ports:
       - "8082:8082"
     environment:
-      JWT_ISSUER_URI: http://keycloak:8080/realms/ecommerce
+      JWT_ISSUER_URI: http://localhost:8080/realms/ecommerce
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/inventoryservice
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -279,7 +290,8 @@ services:
     ports:
       - "8081:8081"
     environment:
-      JWT_ISSUER_URI: http://keycloak:8080/realms/ecommerce
+      JWT_ISSUER_URI: http://localhost:8080/realms/ecommerce
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/favouriteservice
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -296,7 +308,8 @@ services:
     ports:
       - "8089:8089"
     environment:
-      JWT_ISSUER_URI: http://keycloak:8080/realms/ecommerce
+      JWT_ISSUER_URI: http://localhost:8080/realms/ecommerce
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ratingservice
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -313,7 +326,8 @@ services:
     ports:
       - "8083:8083"
     environment:
-      JWT_ISSUER_URI: http://keycloak:8080/realms/ecommerce
+      JWT_ISSUER_URI: http://localhost:8080/realms/ecommerce
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/mediaservice
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -336,7 +350,8 @@ services:
     ports:
       - "8091:8091"
     environment:
-      JWT_ISSUER_URI: http://keycloak:8080/realms/ecommerce
+      JWT_ISSUER_URI: http://localhost:8080/realms/ecommerce
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/taxservice
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -353,7 +368,8 @@ services:
     ports:
       - "8093:8093"
     environment:
-      JWT_ISSUER_URI: http://keycloak:8080/realms/ecommerce
+      JWT_ISSUER_URI: http://localhost:8080/realms/ecommerce
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/promotionservice
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -370,7 +386,8 @@ services:
     ports:
       - "8094:8094"
     environment:
-      JWT_ISSUER_URI: http://keycloak:8080/realms/ecommerce
+      JWT_ISSUER_URI: http://localhost:8080/realms/ecommerce
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
       ELASTICSEARCH_URL: http://elasticsearch:9200
       ELASTICSEARCH_USERNAME: ""
       ELASTICSEARCH_PASSWORD: ""
@@ -390,7 +407,8 @@ services:
     ports:
       - "8090:8090"
     environment:
-      JWT_ISSUER_URI: http://keycloak:8080/realms/ecommerce
+      JWT_ISSUER_URI: http://localhost:8080/realms/ecommerce
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_DB: ecommerce

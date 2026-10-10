@@ -20,6 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -115,6 +116,25 @@ public class UserServiceImpl implements UserService {
     public User findById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> BusinessException.notFound("auth.user.not.found.with.user.id", userId));
+    }
+
+    @Override
+    @Transactional
+    public User resolveCurrentUser(String keycloakUserId, String username, String email, String fullName) {
+        return userRepository.findByKeycloakUserId(keycloakUserId)
+                .or(() -> userRepository.findByUsername(username).map(user -> {
+                    user.setKeycloakUserId(keycloakUserId);
+                    return userRepository.save(user);
+                }))
+                .orElseGet(() -> userRepository.save(User.builder()
+                        .keycloakUserId(keycloakUserId)
+                        .username(username)
+                        .email(email)
+                        .fullName(fullName)
+                        .gender("UNKNOWN")
+                        .roles(new HashSet<>(Set.of(roleService.findByName(RoleName.USER)
+                                .orElseThrow(() -> BusinessException.notFound("auth.role.not.found.in.database", RoleName.USER)))))
+                        .build()));
     }
 
     @Override

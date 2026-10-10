@@ -20,5 +20,11 @@ public interface UserService {
 
     User findByUsername(String userName);
 
+    /**
+     * Local profile for the caller's Keycloak token: by {@code sub}, then by {@code preferred_username};
+     * provisioned on first sight for users that exist only in Keycloak (e.g. realm-imported ones).
+     */
+    User resolveCurrentUser(String keycloakUserId, String username, String email, String fullName);
+
     Page<UserResponse> findAllUsers(int page, int size, String sortBy, String sortOrder);
 }

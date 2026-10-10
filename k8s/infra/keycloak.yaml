@@ -43,6 +43,11 @@ spec:
                 secretKeyRef:
                   name: keycloak-secret
                   key: KEYCLOAK_ADMIN_PASSWORD
+            # One issuer for browser- and pod-obtained tokens; discovery/JWKS/token stay on keycloak:8080 in-cluster.
+            - name: KC_HOSTNAME
+              value: http://keycloak.ecommerce.local
+            - name: KC_HOSTNAME_BACKCHANNEL_DYNAMIC
+              value: "true"
             - name: KC_DB
               value: postgres
             - name: KC_DB_URL_HOST

@@ -21,11 +21,11 @@ export function useLogin() {
   return { login, isPending: false };
 }
 
-/** Registration reuses the SSO flow — the Keycloak login page links to sign-up. */
+/** Registration reuses the SSO flow, but opens Keycloak's sign-up form directly. */
 export function useRegister() {
   const register = useCallback(() => {
     if (typeof window === "undefined") return;
-    window.location.href = buildSsoLoginUrl();
+    window.location.href = buildSsoLoginUrl("/auth/callback", "register");
   }, []);
 
   return { register };

@@ -55,10 +55,15 @@ public class AuthController {
      */
     @GetMapping("/login")
     public ResponseEntity<Void> ssoLogin(
-            @RequestParam(value = "redirect_uri", required = false) String redirectUri) {
+            @RequestParam(value = "redirect_uri", required = false) String redirectUri,
+            @RequestParam(value = "mode", required = false) String mode) {
         String frontendRedirect = resolveFrontendRedirect(redirectUri);
         String state = ssoSessionStore.createLoginState(frontendRedirect);
-        String authorizeUrl = UriComponentsBuilder.fromUriString(keycloakProperties.authorizationEndpoint())
+        // mode=register lands on Keycloak's sign-up form; the code/callback flow is identical.
+        String endpoint = "register".equals(mode)
+                ? keycloakProperties.registrationEndpoint()
+                : keycloakProperties.authorizationEndpoint();
+        String authorizeUrl = UriComponentsBuilder.fromUriString(endpoint)
                 .queryParam("client_id", keycloakProperties.getClientId())
                 .queryParam("response_type", "code")
                 .queryParam("scope", ssoProperties.getScope())

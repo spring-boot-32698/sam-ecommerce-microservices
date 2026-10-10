@@ -74,13 +74,26 @@ class AuthControllerTest {
 
     @Test
     void ssoLoginShouldRedirectToKeycloak() {
-        ResponseEntity<Void> response = authController.ssoLogin(null);
+        ResponseEntity<Void> response = authController.ssoLogin(null, null);
 
         assertEquals(HttpStatus.FOUND, response.getStatusCode());
         URI location = response.getHeaders().getLocation();
         assertNotNull(location);
         assertTrue(location.toString().startsWith(
                 "http://localhost:8080/realms/test/protocol/openid-connect/auth"));
+        assertTrue(location.toString().contains("client_id=test-client"));
+        assertTrue(location.toString().contains("response_type=code"));
+    }
+
+    @Test
+    void ssoLoginInRegisterModeShouldRedirectToKeycloakSignUp() {
+        ResponseEntity<Void> response = authController.ssoLogin(null, "register");
+
+        assertEquals(HttpStatus.FOUND, response.getStatusCode());
+        URI location = response.getHeaders().getLocation();
+        assertNotNull(location);
+        assertTrue(location.toString().startsWith(
+                "http://localhost:8080/realms/test/protocol/openid-connect/registrations"));
         assertTrue(location.toString().contains("client_id=test-client"));
         assertTrue(location.toString().contains("response_type=code"));
     }
