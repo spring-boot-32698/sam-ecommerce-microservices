@@ -82,6 +82,16 @@ public class RestClientAutoConfiguration {
     }
 
     /**
+     * Ready-built client for services that inject {@link RestClient} directly
+     * (rating, promotion, tax, search) rather than the builder.
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public RestClient restClient(RestClient.Builder restClientBuilder) {
+        return restClientBuilder.build();
+    }
+
+    /**
      * Forwards X-Correlation-Id and X-Request-Id from the current MDC context
      * to outbound HTTP calls so distributed traces stay connected.
      */

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -83,6 +84,9 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderDto save(OrderDto orderDto) {
         log.info("OrderDto, service; save order");
+        if (orderDto.getOrderDate() == null) {
+            orderDto.setOrderDate(LocalDateTime.now());
+        }
         return OrderMappingHelper.map(orderRepository.save(OrderMappingHelper.map(orderDto)));
     }
 

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { CheckCircle, CreditCard, Truck, MapPin } from "lucide-react";
 import { useCartStore } from "@ecommerce/lib/store";
 import { useAuthStore } from "@ecommerce/lib/store";
 import { Button, Input } from "@ecommerce/ui";
-import { orderApi, paymentApi } from "@ecommerce/lib/api";
+import { authApi, orderApi, paymentApi } from "@ecommerce/lib/api";
 import { useRouter } from "@/i18n/navigation";
 import StepIndicator from "@/components/checkout/StepIndicator";
 import OrderSummary from "@/components/cart/OrderSummary";
@@ -46,15 +46,16 @@ export default function CheckoutPage() {
 
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "BANK_TRANSFER" | "PAYPAL">("COD");
 
-  if (!isAuthenticated) {
-    router.replace("/login?redirect=/checkout");
-    return null;
-  }
+  const mustLogin = !isAuthenticated;
+  const cartEmpty = items.length === 0 && step !== 3;
 
-  if (items.length === 0 && step !== 3) {
-    router.replace("/cart");
-    return null;
-  }
+  // Redirect after mount: navigating during render crashes server rendering (no window).
+  useEffect(() => {
+    if (mustLogin) router.replace("/login?redirect=/checkout");
+    else if (cartEmpty) router.replace("/cart");
+  }, [mustLogin, cartEmpty, router]);
+
+  if (mustLogin || cartEmpty) return null;
 
   const shippingFee = totalPrice() >= 500000 ? 0 : 30000;
   const total = totalPrice() + shippingFee;
@@ -68,16 +69,20 @@ export default function CheckoutPage() {
     try {
       const firstItem = items[0];
       const orderRes = await orderApi.create({
-        orderDate: new Date().toISOString(),
         orderDesc: shipping.note || "EzBuy order",
         orderFee: total,
         productId: firstItem.product.productId,
       });
-      const newOrderId = orderRes.data?.data?.orderId;
+      // order-service returns a bare OrderDto, not an ApiResponse envelope.
+      const newOrderId = orderRes.data?.orderId ?? orderRes.data?.data?.orderId;
+      if (newOrderId == null) throw new Error("Order was created without an id");
+      // Sessions created before /users/me worked hold id 0, so look the profile up if needed.
+      const userId = user?.id || (await authApi.getProfile()).data?.data?.id;
       await paymentApi.create({
         isPayed: paymentMethod !== "COD",
         paymentStatus: paymentMethod === "COD" ? "NOT_STARTED" : "IN_PROGRESS",
         orderId: newOrderId,
+        userId,
       });
       setOrderId(newOrderId);
       clearCart();

@@ -1,0 +1,66 @@
+# LOCAL DEV ONLY: auto-merged by `docker compose`. Not meant to be committed.
+# Works around repo gaps so the stack boots locally (see .claude/handbook/05-known-gaps.md):
+#  - G25: these services' Liquibase changelogs are a placeholder (`SELECT 1`) and create no tables,
+#         while ddl-auto=validate fails on the empty schema. Let Hibernate create the tables instead.
+#  - G26: payment/notification read ${kafka.bootstrap.servers} (and notification reads
+#         ${payment.kafka.consumer-group-id}), which compose never sets.
+x-ddl-update: &ddl-update
+  SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
+services:
+  # G28: 13 Hikari pools (10 each by default) + Keycloak exceed Postgres' default max_connections=100.
+  postgres:
+    command: postgres -c max_connections=300
+
+  order-service:
+    # G30: built from local code (cart made optional in OrderMappingHelper)
+    image: order-service:1.0-SNAPSHOT
+    pull_policy: never
+    environment: *ddl-update
+  product-service:
+    environment: *ddl-update
+  payment-service:
+    environment:
+      <<: *ddl-update
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  shipping-service:
+    environment: *ddl-update
+  favourite-service:
+    environment: *ddl-update
+  inventory-service:
+    environment: *ddl-update
+  notification-service:
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      # code reads ${payment.kafka.consumer-group-id}; its yml only defines a different key
+      PAYMENT_KAFKA_CONSUMER_GROUP_ID: notification-groupId
+
+  # G27: Family-B services inject RestClient, but common-lib only provided RestClient.Builder.
+  # Fixed in common-lib (RestClientAutoConfiguration#restClient); these run images built from local code:
+  #   mvn -DskipTests -Ddependency-check.skip=true -pl search-service,promotion-service,rating-service,tax-service -am package jib:dockerBuild
+  search-service:
+    image: search-service:1.0-SNAPSHOT
+    pull_policy: never
+    environment:
+      # G29: ClientConfiguration.connectedTo() wants host:port; a scheme makes it resolve "http" as a host
+      ELASTICSEARCH_URL: elasticsearch:9200
+  promotion-service:
+    image: promotion-service:1.0-SNAPSHOT
+    pull_policy: never
+  rating-service:
+    image: rating-service:1.0-SNAPSHOT
+    pull_policy: never
+  tax-service:
+    image: tax-service:1.0-SNAPSHOT
+    pull_policy: never
+
+  # G33: the published frontend image predates the current Dockerfile and has no API URL baked in
+  # (NEXT_PUBLIC_* is build-time), so from localhost:3000 it calls api.localhost:3000. Built locally:
+  #   cd frontend && docker build -f apps/web/Dockerfile --build-arg NEXT_PUBLIC_API_URL=http://localhost:9080 -t ecommerce-web:local .
+  frontend:
+    image: ecommerce-web:local
+    pull_policy: never
+  # G37: built from local code (/users/me resolves by Keycloak sub and provisions realm-only users)
+  auth-service:
+    image: auth-service:1.0-SNAPSHOT
+    pull_policy: never

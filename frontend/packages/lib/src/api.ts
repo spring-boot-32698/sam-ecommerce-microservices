@@ -81,10 +81,11 @@ export interface SsoTokenResponse {
  * browser here → backend `/auth/login` → Keycloak login page → backend `/auth/callback`
  * → back to `callbackPath` on this origin carrying a single-use `ticket`.
  */
-export function buildSsoLoginUrl(callbackPath = "/auth/callback"): string {
+export function buildSsoLoginUrl(callbackPath = "/auth/callback", mode: "login" | "register" = "login"): string {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const redirectUri = `${origin}${callbackPath}`;
-  return `${API_BASE_URL}/api/v1/auth/login?redirect_uri=${encodeURIComponent(redirectUri)}`;
+  const modeParam = mode === "register" ? "&mode=register" : "";
+  return `${API_BASE_URL}/api/v1/auth/login?redirect_uri=${encodeURIComponent(redirectUri)}${modeParam}`;
 }
 
 // Auth API

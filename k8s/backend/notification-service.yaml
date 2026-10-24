@@ -48,6 +48,12 @@ spec:
             - configMapRef:
                 name: ecommerce-config
           env:
+            # code reads ${payment.kafka.consumer-group-id}; its yml only defines a different key
+            - name: PAYMENT_KAFKA_CONSUMER_GROUP_ID
+              value: notification-groupId
+            # SMTP reachability must not gate pod readiness (the mail check is slow and fails without creds)
+            - name: MANAGEMENT_HEALTH_MAIL_ENABLED
+              value: "false"
             - name: MAIL_USERNAME
               valueFrom:
                 secretKeyRef:

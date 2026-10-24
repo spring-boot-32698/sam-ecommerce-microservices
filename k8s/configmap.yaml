@@ -12,19 +12,24 @@ data:
   # Keycloak
   KEYCLOAK_ISSUER_URI: "http://keycloak:8080/realms/ecommerce"
   KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs"
-  JWT_ISSUER_URI: "http://keycloak:8080/realms/ecommerce"
+  # Canonical issuer = the browser-facing Keycloak URL (KC_HOSTNAME); keys are fetched in-cluster.
+  JWT_ISSUER_URI: "http://keycloak.ecommerce.local/realms/ecommerce"
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs"
   KEYCLOAK_SERVER_URL: "http://keycloak:8080"
   KEYCLOAK_PUBLIC_SERVER_URL: "http://keycloak.ecommerce.local"
 
   # Kafka
   KAFKA_SERVERS: "kafka:9092"
+  # payment/notification read ${kafka.bootstrap.servers}
+  KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
 
   # Redis
   REDIS_HOST: "redis"
   REDIS_PORT: "6379"
 
   # Elasticsearch
-  ELASTICSEARCH_URL: "http://elasticsearch:9200"
+  # host:port: ClientConfiguration.connectedTo() rejects a scheme
+  ELASTICSEARCH_URL: "elasticsearch:9200"
 
   # Object storage (RustFS - S3-compatible)
   STORAGE_ENDPOINT: "http://rustfs:9000"
